@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RMz Lab</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#0a0a12;color:#fff}
+header{background:linear-gradient(90deg,#ff6a00,#ffb800,#0057ff);padding:12px 15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.logo{font-size:24px;font-weight:900;color:#000;background:#fff;padding:4px 12px;border-radius:10px}.logo span{color:#ff6a00}
+.top-btns{display:flex;gap:8px;flex-wrap:wrap}.top-btns button{border:none;padding:8px 12px;border-radius:20px;font-weight:700;cursor:pointer}
+.btn-lang{background:#fff;color:#000}.btn-admin{background:#000;color:#ffb800}.btn-sign{background:#ff6a00;color:#fff}
+.banner-wrap{margin:15px;border-radius:20px;overflow:hidden;min-height:200px}
+.banner-slide{display:none;min-height:200px;padding:25px;text-align:center;align-content:center;background-size:cover;background-position:center;position:relative}
+.banner-slide.active{display:block;animation:fade .5s}@keyframes fade{from{opacity:0}to{opacity:1}}
+.banner-slide h1{font-size:30px;color:#fff;text-shadow:2px 2px 0 #000;line-height:1.1;position:relative;z-index:1}
+.banner-slide p{color:#ffe600;font-weight:800;margin-top:8px;text-shadow:1px 1px 0 #000;position:relative;z-index:1}
+.overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,106,0,.65),rgba(0,87,255,.55))}
+.dots{text-align:center}.dots span{font-size:22px;cursor:pointer;color:#ffb800}
+.controls{display:flex;gap:10px;padding:10px 15px;flex-wrap:wrap}.controls input,.controls select{flex:1;min-width:140px;padding:12px;border-radius:12px;border:2px solid #ffb800;background:#1a1a2e;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:15px;padding:15px}
+.card{background:#1a1a2e;border:2px solid #ffb800;border-radius:18px;overflow:hidden;cursor:pointer}.card img{width:100%;height:140px;object-fit:cover}.card-body{padding:10px}.price{color:#ffb800;font-weight:900}.card-body button{width:100%;background:linear-gradient(90deg,#ff6a00,#ffb800);border:none;padding:9px;border-radius:10px;font-weight:800;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;overflow-y:auto;padding:20px}.modal-box{background:#fff;color:#000;max-width:480px;margin:20px auto;border-radius:20px;padding:20px}
+.modal-box input,.modal-box textarea{width:100%;padding:11px;margin:6px 0;border-radius:10px;border:1px solid #ccc}.modal-box button{width:100%;padding:12px;border:none;border-radius:12px;font-weight:800;cursor:pointer;margin-top:8px}
+.btn-orange{background:#ff6a00;color:#fff}.btn-blue{background:#0057ff;color:#fff}.btn-black{background:#000;color:#ffb800}.btn-red{background:#ff2222;color:#fff}.btn-green{background:#00c853;color:#fff}
+.close{float:right;font-size:22px;cursor:pointer}.dash{background:#111;padding:12px;border-radius:12px;display:flex;justify-content:space-between}.dash b{font-size:22px;color:#ff6a00}
+.order-item{background:#f5f5f5;padding:10px;border-radius:10px;margin:6px 0;color:#000;font-size:13px}
+.banner-manage{background:#222;padding:10px;border-radius:10px;margin:8px 0;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:8px}.banner-manage img{width:60px;height:40px;object-fit:cover;border-radius:8px}
+.upload-box{border:2px dashed #ff6a00;border-radius:15px;padding:15px;text-align:center;background:#fff7e6;cursor:pointer}.upload-box img{max-width:100%;max-height:150px;border-radius:10px;margin-top:8px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="logo">RMz <span>Lab</span></div><div class="top-btns"><button class="btn-lang" onclick="alert('Banner eka Sinhalen liyala danna!')">සිංහල / English</button><button class="btn-sign" onclick="openModal('signModal')">Sign In</button><button class="btn-admin" onclick="openModal('adminLoginModal')">⚙️ Admin</button></div></header>
+<div class="banner-wrap" id="bannerWrap"></div><div class="dots" id="dots"></div>
+<div class="controls"><input id="search" placeholder="Search..." oninput="render()"><select id="sort" onchange="render()"><option value="low">Price: Low to High</option><option value="high">Price: High to Low</option></select></div>
+<div class="grid" id="grid"></div>
+<div id="adminPanel" class="hidden" style="padding:0 15px 20px"><div style="background:#ffb800;color:#000;padding:15px;border-radius:15px">
+<h2>📊 Mage Dashboard</h2><div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap"><div class="dash" style="flex:1"><span>Total Orders<br><b id="totalOrders">0</b></span>📦</div><div class="dash" style="flex:1"><span>Total Earn<br><b id="totalEarn">Rs. 0</b></span>💰</div></div>
+<h3 style="margin-top:15px">🎨 Banners - Oya ge Photo Dalath Hadanna</h3>
+<button class="btn-black" onclick="openModal('bannerModal')">+ Add New Banner - Photo Ekak Dalama</button>
+<div id="bannerList" style="margin-top:10px"></div><hr style="margin:12px 0">
+<button class="btn-black" onclick="openModal('addModal')">+ Add New Item</button><button class="btn-blue" onclick="logoutAdmin()">Logout</button>
+<h3 style="margin-top:15px">Recent Orders:</h3><div id="orderList"></div></div></div>
+<footer style="text-align:center;padding:20px;opacity:.7">RMz Lab • shipingrm@gmail.com</footer>
+
+<div id="detailModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><img id="dImg" style="width:100%;border-radius:12px"><h2 id="dName"></h2><p id="dDesc"></p><h3 id="dPrice"></h3><button class="btn-orange" onclick="openOrder()">ORDER NOW</button></div></div>
+<div id="orderModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><h2>Order Details</h2><input id="oName" placeholder="Nama *"><input id="oNum1" placeholder="Phone 1 *"><input id="oNum2" placeholder="Phone 2 *"><input id="oCity" placeholder="City *"><input id="oDistrict" placeholder="District *"><textarea id="oAddress" placeholder="Address *"></textarea><input id="oItem" readonly><button class="btn-orange" onclick="submitOrder()">Confirm Order</button></div></div>
+<div id="signModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><h2>Sign In</h2><input placeholder="Name"><input placeholder="Email / Phone"><button class="btn-blue" onclick="alert('Success!');closeAll()">Sign In</button></div></div>
+<div id="adminLoginModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><h2>Admin Only</h2><input type="password" id="adminPass" placeholder="Admin Password"><button class="btn-black" onclick="adminLogin()">Login</button></div></div>
+<div id="addModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><h2>Add Any Item</h2><input id="nName" placeholder="Item Name"><input id="nPrice" type="number" placeholder="Price Rs."><input id="nImg" placeholder="Photo URL (nathnam හිස්ව)"><textarea id="nDesc" placeholder="Description"></textarea><button class="btn-orange" onclick="addItem()">Add Item</button></div></div>
+
+<!-- BANNER MODAL WITH PHOTO UPLOAD -->
+<div id="bannerModal" class="modal"><div class="modal-box"><span class="close" onclick="closeAll()">×</span><h2>🎨 Aluth Banner ekak</h2>
+<input id="bTitle" placeholder="Banner Title - Ex: 50% OFF Photo Restore">
+<input id="bSub" placeholder="Sub Title - Ex: Today Only">
+<!-- PHOTO UPLOAD - MEKA THAMAI ALUTH EKA -->
+<div class="upload-box" onclick="document.getElementById('bFile').click()">
+<div style="font-size:28px">📸</div><b>Photo Ekak Choose Karanna</b><br><span style="font-size:12px;color:#666">Gallery eken oya ge photo ekak pick karanna - Click karanna</span>
+<img id="bPreview" class="hidden">
+<input type="file" id="bFile" accept="image/*" class="hidden" onchange="previewBanner(this)">
+</div>
+<p style="font-size:12px;color:#888;text-align:center;margin-top:6px">Photo ekak nathnam Colour Banner ekak ei. Photo URL ekenuth danna puluwan:</p>
+<input id="bImg" placeholder="Photo URL (optional)">
+<button class="btn-green" onclick="addBanner()">✅ Add Banner</button>
+</div></div>
+
+<script>
+let ADMIN_PASS="2009117yrm";
+let tempBannerImg="";
+let banners=JSON.parse(localStorage.getItem('rmz_banners'))||[
+{title:"WE RESTORE YOUR OLD PHOTOS",sub:"OLD TO NEW • FAST • HD",img:"https://images.unsplash.com/photo-1519741497674-611481863552?w=800"},
+{title:"50% OFF - FIRST ORDER",sub:"Today Only! RMz Lab",img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800"}
+];
+let items=JSON.parse(localStorage.getItem('rmz_items'))||[
+{name:"Photo Restore - Old to New",price:1500,img:"https://images.unsplash.com/photo-1519741497674-611481863552?w=400",desc:"Old photo eka aluth HD karanawa."},
+{name:"Black & White to Color",price:1800,img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",desc:"Kalu sudu eka colour karanawa."}
+];
+let orders=JSON.parse(localStorage.getItem('rmz_orders'))||[];
+let currentItem=null,curBanner=0,bannerTimer=null;
+function save(){try{localStorage.setItem('rmz_banners',JSON.stringify(banners));}catch(e){alert('Photo eka loku wadi! Podi photo ekak danna (1MB walata adu).');banners.pop();}localStorage.setItem('rmz_items',JSON.stringify(items));localStorage.setItem('rmz_orders',JSON.stringify(orders));}
+function previewBanner(input){
+if(input.files && input.files[0]){
+let reader=new FileReader();
+reader.onload=function(e){tempBannerImg=e.target.result;let p=document.getElementById('bPreview');p.src=tempBannerImg;p.classList.remove('hidden');}
+reader.readAsDataURL(input.files[0]);
+}
+}
+function renderBanners(){
+document.getElementById('bannerWrap').innerHTML=banners.map((b,i)=>`<div class="banner-slide ${i===curBanner?'active':''}" style="background-image:url('${b.img}')"><div class="overlay"></div><h1>${b.title}</h1><p>${b.sub}</p></div>`).join('');
+document.getElementById('dots').innerHTML=banners.map((_,i)=>`<span onclick="showBanner(${i})">${i===curBanner?'●':'○'}</span>`).join('');
+document.getElementById('bannerList').innerHTML=banners.map((b,i)=>`<div class="banner-manage"><img src="${b.img}"><span style="flex:1;font-size:13px"><b>${b.title}</b><br>${b.sub}</span><button class="btn-red" style="width:auto;padding:6px 10px" onclick="deleteBanner(${i})">❌ Ain Karanna</button></div>`).join('');
+}
+function showBanner(i){curBanner=i;renderBanners();}
+function startAuto(){clearInterval(bannerTimer);bannerTimer=setInterval(()=>{curBanner=(curBanner+1)%banners.length;renderBanners();},4000);}
+function addBanner(){
+let t=document.getElementById('bTitle').value,s=document.getElementById('bSub').value,url=document.getElementById('bImg').value;
+let finalImg=tempBannerImg || url || 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800';
+if(!t){alert('Title eka danna!');return;}
+banners.push({title:t,sub:s,img:finalImg});save();closeAll();renderBanners();
+tempBannerImg="";document.getElementById('bTitle').value='';document.getElementById('bSub').value='';document.getElementById('bImg').value='';document.getElementById('bPreview').classList.add('hidden');document.getElementById('bFile').value='';
+alert('Banner Added! 🎉 Oya ge photo eka banner eke!');
+}
+function deleteBanner(i){if(confirm('Ain karanna da?')){banners.splice(i,1);if(curBanner>=banners.length)curBanner=0;save();renderBanners();}}
+function render(){let q=document.getElementById('search').value.toLowerCase();let sort=document.getElementById('sort').value;let list=items.filter(i=>i.name.toLowerCase().includes(q));list.sort((a,b)=>sort==='low'?a.price-b.price:b.price-a.price);document.getElementById('grid').innerHTML=list.map(it=>`<div class="card" onclick="openDetail(${items.indexOf(it)})"><img src="${it.img}"><div class="card-body"><h3>${it.name}</h3><div class="price">Rs. ${it.price}</div><button>View</button></div></div>`).join('');updateDash();renderBanners();}
+function openDetail(i){currentItem=items[i];document.getElementById('dImg').src=currentItem.img;document.getElementById('dName').innerText=currentItem.name;document.getElementById('dDesc').innerText=currentItem.desc;document.getElementById('dPrice').innerText='Rs. '+currentItem.price;openModal('detailModal');}
+function openOrder(){closeAll();document.getElementById('oItem').value=currentItem?currentItem.name:'';openModal('orderModal');}
+function submitOrder(){let name=document.getElementById('oName').value,n1=document.getElementById('oNum1').value,n2=document.getElementById('oNum2').value,city=document.getElementById('oCity').value,dist=document.getElementById('oDistrict').value,addr=document.getElementById('oAddress').value;if(!name||!n1||!city||!dist||!addr){alert('Okoma fill karanna!');return;}let o={name,n1,n2,city,dist,addr,item:document.getElementById('oItem').value,price:currentItem?currentItem.price:0,date:new Date().toLocaleString()};orders.push(o);save();updateDash();let subject=encodeURIComponent('NEW ORDER - '+o.item);let body=encodeURIComponent(`Item: ${o.item}\nNama: ${o.name}\nPhone1: ${o.n1}\nPhone2: ${o.n2}\nCity: ${o.city}\nDistrict: ${o.dist}\nAddress: ${o.addr}`);window.location.href=`mailto:shipingrm@gmail.com?subject=${subject}&body=${body}`;alert('Order save una!');closeAll();render();}
+function adminLogin(){if(document.getElementById('adminPass').value===ADMIN_PASS){document.getElementById('adminPanel').classList.remove('hidden');closeAll();alert('Welcome Boss!');render();}else alert('Wrong Password!');}
+function logoutAdmin(){document.getElementById('adminPanel').classList.add('hidden');}
+function addItem(){let n=document.getElementById('nName').value,p=document.getElementById('nPrice').value,img=document.getElementById('nImg').value||'https://images.unsplash.com/photo-1519741497674-611481863552?w=400',d=document.getElementById('nDesc').value;if(!n||!p){alert('Name + Price');return;}items.push({name:n,price:Number(p),img,desc:d});save();closeAll();render();}
+function updateDash(){document.getElementById('totalOrders').innerText=orders.length;document.getElementById('totalEarn').innerText='Rs. '+orders.reduce((s,o)=>s+Number(o.price||0),0);document.getElementById('orderList').innerHTML=orders.slice().reverse().map(o=>`<div class="order-item"><b>${o.item}</b> - Rs.${o.price}<br>${o.name} | ${o.n1} / ${o.n2}<br>${o.city}, ${o.dist}</div>`).join('')||'Thama order na';}
+function openModal(id){closeAll();document.getElementById(id).style.display='block';}
+function closeAll(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');}
+render();startAuto();
+function submitOrder(){
+let name=document.getElementById('oName').value,
+n1=document.getElementById('oNum1').value,
+n2=document.getElementById('oNum2').value,
+city=document.getElementById('oCity').value,
+dist=document.getElementById('oDistrict').value,
+addr=document.getElementById('oAddress').value;
+if(!name||!n1||!city||!dist||!addr){alert('Okoma fill karanna!');return;}
+let o={name,n1,n2,city,dist,addr,item:document.getElementById('oItem').value,price:currentItem?currentItem.price:0,date:new Date().toLocaleString()};
+orders.push(o);save();updateDash();
+
+// --- ALUTH AUTO MAIL SYSTEM ---
+fetch('https://formsubmit.co/ajax/shipingrm@gmail.com', {
+method:'POST',
+headers:{'Content-Type':'application/json','Accept':'application/json'},
+body: JSON.stringify({
+name: 'RMz Lab - NEW ORDER',
+subject: 'NEW ORDER - ' + o.item + ' - ' + o.name,
+message: `NEW ORDER - RMz Lab\n\nItem: ${o.item}\nPrice: Rs. ${o.price}\n\nCustomer:\nNama: ${o.name}\nPhone 1: ${o.n1}\nPhone 2: ${o.n2}\nCity: ${o.city}\nDistrict: ${o.dist}\nAddress: ${o.addr}\nDate: ${o.date}`,
+_replyto: 'shipingrm@gmail.com'
+})
+}).then(res=>{console.log('Mail sent',res)}).catch(err=>{console.log(err)});
+
+alert('Order eka hari! Oya ge mail ekata giya ✅');
+closeAll();render();
+}
+</script>
+</body>
+</html>
